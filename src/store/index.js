@@ -11,6 +11,10 @@ export default new Vuex.Store({
             waiting_timeout: null,
             connection: null,
         },
+        tm: {
+            connection: null,
+            sim_time_s: 0.0,
+        },
     },
     mutations: {},
     actions: {
@@ -64,6 +68,22 @@ export default new Vuex.Store({
                 // Set the send status as sending
                 context.state.tc.send_status = 'sending';
             }
+        },
+        connect_tm(context) {
+            // Connect to websocket
+            console.log('Starting WebSocket TM connection');
+            context.state.tm.connection = new WebSocket('ws://localhost:5031');
+
+            // Add a callback for when connected
+            context.state.tm.connection.onopen = () => {
+                console.log('WebSocket TM Connection opened');
+            };
+            // Callback for when recieveing a message from the websocket
+            context.state.tm.connection.onmessage = event => {
+                // Get the return code from the message
+                var tm = JSON.parse(event.data);
+                context.state.tm = Object.assign(context.state.tm, tm);
+            };
         },
     },
     modules: {},

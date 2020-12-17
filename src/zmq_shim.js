@@ -4,7 +4,7 @@ const zmq = require('zeromq');
 const WebSocketServer = require('websocket').server;
 const http = require('http');
 
-async function run() {
+async function run_tc() {
     const server = http.createServer();
     server.listen(5021);
     const web_tc_server = new WebSocketServer({
@@ -46,4 +46,37 @@ async function run() {
     });
 }
 
-run();
+async function run_tm() {
+    const server = http.createServer();
+    server.listen(5031);
+    const web_tm_server = new WebSocketServer({
+        httpServer: server,
+    });
+
+    web_tm_server.on('request', async request => {
+        console.log(
+            `New connection to WebSocket Tm server from ${request.origin}`
+        );
+
+        // Accept the request
+        const connection = request.accept(null, request.origin);
+
+        // Create ZMQ and connect
+        const zmq_tm_sock = new zmq.Subscriber();
+        await zmq_tm_sock.connect('tcp://localhost:5030');
+        console.log('ZMQ TM Subscriber bound on localhost:5030');
+
+        zmq_tm_sock.subscribe('');
+
+        // Get all content from ZMQ
+        for await (const [topic] of zmq_tm_sock) {
+            console.log(`TM - got ${topic}`);
+
+            // Forward to websocket
+            connection.send(topic.toString());
+        }
+    });
+}
+
+run_tc();
+run_tm();
