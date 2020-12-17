@@ -34,23 +34,27 @@
         </v-app-bar>
 
         <v-main>
-            <HelloWorld />
+            <TextTcInput />
         </v-main>
     </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld';
+import TextTcInput from './components/TextTcInput';
 
 export default {
     name: 'App',
 
     components: {
-        HelloWorld,
+        TextTcInput,
     },
 
     data: () => ({
         //
     }),
+
+    created() {
+        this.$store.dispatch('connect_tc');
+    },
 };
 </script>
