@@ -26,12 +26,9 @@ async function run_tc() {
 
         // On a signal from the websocket forward it to the ZMQ socket
         connection.on('message', async message => {
-            // Format data in JSON string
-            var data = JSON.stringify({ raw_tc: message.utf8Data });
-
             // Send data to zmq
-            console.log(` -> ${data}`);
-            zmq_tc_sock.send(data);
+            console.log(` -> ${message.utf8Data}`);
+            zmq_tc_sock.send(message.utf8Data);
 
             // Wait for reply from zmq
             var reply = await zmq_tc_sock.receive();

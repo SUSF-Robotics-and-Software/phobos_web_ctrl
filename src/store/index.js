@@ -14,6 +14,7 @@ export default new Vuex.Store({
         tm: {
             connection: null,
             sim_time_s: 0.0,
+            left_cam_frame: null,
         },
     },
     mutations: {},
@@ -62,8 +63,11 @@ export default new Vuex.Store({
                 // Set the raw TC
                 context.state.tc.raw = raw_tc;
 
+                // Pack the raw TC in a JSON object
+                const data = JSON.stringify({ raw_tc: raw_tc });
+
                 // Send the TC
-                context.state.tc.connection.send(raw_tc);
+                context.state.tc.connection.send(data);
 
                 // Set the send status as sending
                 context.state.tc.send_status = 'sending';

@@ -9,6 +9,7 @@
         </v-app-bar>
 
         <v-main>
+            <CamImageView />
             <TextTcInput />
         </v-main>
     </v-app>
@@ -16,12 +17,14 @@
 
 <script>
 import TextTcInput from './components/TextTcInput';
+import CamImageView from './components/CamImageView';
 
 export default {
     name: 'App',
 
     components: {
         TextTcInput,
+        CamImageView,
     },
 
     data: () => ({
