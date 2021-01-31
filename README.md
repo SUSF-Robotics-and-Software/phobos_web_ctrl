@@ -10,14 +10,14 @@ npm install
 npm run serve
 ```
 
-### Compiles and minifies for production
+### Runs ZMQ to WebSocket shim
+Must install nodemon firsts:
 ```
-npm run build
+npm i -g nodemon
 ```
 
-### Lints and fixes files
 ```
-npm run lint
+nodemon src/zmq_shim.js
 ```
 
 ### Customize configuration
