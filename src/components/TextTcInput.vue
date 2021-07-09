@@ -63,6 +63,7 @@ export default {
     },
     methods: {
         send() {
+            this.$emit('command_sent', this.raw_tc);
             this.$store.dispatch('send_raw_tc', this.raw_tc);
         },
     },
