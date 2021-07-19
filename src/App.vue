@@ -1,5 +1,6 @@
 <template>
     <v-app>
+        <!-- Webpage header -->
         <v-app-bar app color="primary" dark dense>
             <v-toolbar-title>Phobos Web Control</v-toolbar-title>
 
@@ -10,8 +11,15 @@
 
         <v-main>
             <v-container fluid>
+                <!-- Main webpage split into 3 columns -->
                 <v-row no-gutters>
+                    <!-- 1st column: Rover control -->
                     <v-col sm="4">
+                        <!--
+                            Safe button
+                            Switches state of rover between safe and unsafe
+                            When is safe, displays reason for safe state
+                        -->
                         <v-btn
                             block
                             v-bind:color="safe ? 'green' : 'red'"
@@ -24,6 +32,7 @@
                                 <div class="caption">{{ safe_cause }}</div>
                             </div>
                         </v-btn>
+                        <!-- Shows current active command -->
                         <v-card>
                             <div
                                 v-for="command in active_command"
@@ -32,15 +41,17 @@
                                 {{ command[0] }} {{ command[1] }}
                             </div>
                         </v-card>
+                        <!-- Terminal control for rover -->
                         <TextTcInput
                             @command_sent="
-                                update_log($event), active_command_check()
+                                active_command_check($event)
                             "
                         />
+                        <!--  -->
                         <Controller
                             :safe="safe"
                             @controller_command="
-                                update_log($event), active_command_check()
+                                active_command_check($event[0], $event[1])
                             "
                         />
                     </v-col>
@@ -129,12 +140,17 @@ export default {
             ]);
             this.command_log.splice(this.max_commands);
         },
-        active_command_check() {
+        active_command_check(command, log=true) {
             var speed = '';
             var crab = '';
             var curvature = '';
             var angular_velocity = '';
-            var command = this.command_log[0][1].split(' ');
+
+            if (log) {
+                this.update_log(command);
+            }
+
+            command = command.split(' ');
 
             if (command[0] == 'mnvr') {
                 switch (command[1]) {
