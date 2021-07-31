@@ -1,4 +1,4 @@
-<template>
+<template #label>
     <div>
         <v-card>
             <v-card-text class="py-0 text-center text-h6">
@@ -8,7 +8,7 @@
                     </v-col>
                     <v-spacer></v-spacer>
                     <v-col sm="5">
-                        Wheel speeds (deg/s)
+                        Wheel speeds (deg s<sup>-1</sup>)
                     </v-col>
                 </v-row>
                 <v-row

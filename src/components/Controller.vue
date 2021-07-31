@@ -1,5 +1,5 @@
 <template>
-    <div></div>
+    <div />
 </template>
 
 <script>
@@ -9,34 +9,23 @@ export default {
         held_button: [],
         gamepad: null,
         gamepad_polling: null,
-        mnvr_type: 'ack',
         raw_tc: '',
-        axes_values: {
-            0: 0, // LS L-R [-1, 1]
-            1: 0, // LS U-D [-1, 1]
-            2: 0, // RS L-R [-1, 1]
-            3: 0, // RS U-D [-1, 1]
-        },
         axes_mapping: {
             velocity: {
-                index: 1, //LS U-D
-                value: 0,
-                dead_zone: 0.05,
-            },
-            crab: {
-                index: 0, //LS L-R
                 value: 0,
                 dead_zone: 0.1,
             },
-            curvature: {
-                index: 2, //RS L-R
+            crab: {
                 value: 0,
-                dead_zone: 0.05,
+                dead_zone: 0.15,
+            },
+            curvature: {
+                value: 0,
+                dead_zone: 0.1,
             },
             angular_velocity: {
-                index: 1, //LS U-D
                 value: 0,
-                dead_zone: 0.05,
+                dead_zone: 0.1,
             },
         },
         max_rover_velocity: 0.175, //TEMP, requires rover params
@@ -45,7 +34,7 @@ export default {
         max_angular_velocity: 1.2, //TEMP
     }),
 
-    props: ['safe'],
+    props: ['safe', 'mnvr_type'],
 
     created: function() {
         window.addEventListener(
@@ -59,14 +48,13 @@ export default {
             false
         );
         document.addEventListener('gamepadButtonDown', e => {
-            this.button_handler(e.detail.buttonIndex, true);
+            this.button_handler(e.detail.buttonIndex, e.detail.buttonValue);
         });
         document.addEventListener('gamepadButtonUp', e => {
-            this.button_handler(e.detail.buttonIndex, false);
+            this.button_handler(e.detail.buttonIndex, 0);
         });
-        document.addEventListener('gamepadAxes', e => {
-            this.axes_values[e.detail.axesIndex] = e.detail.axesValue;
-            this.axes_handler();
+        document.addEventListener('gamepadAxesChange', e => {
+            this.axes_handler(e.detail.axesIndex, e.detail.axesValue);
         });
     },
     computed: {
@@ -78,16 +66,28 @@ export default {
                 3: null, //Y Switch Arm Control
                 4: null, //LB
                 5: null, //RB
-                6: null, //LT
-                7: null, //RT
+                6: this.trigger_handler, //LT
+                7: this.trigger_handler, //RT
                 8: null, //View
                 9: null, //Menu
                 10: null, //LS
                 11: null, //RS
                 12: this.toggle_safe, //DP U Toggle Safe
-                13: null, //DP L
-                14: null, //DP R
-                15: null, //DP D Toggle Camera
+                13: this.stop_command, //DP D Command Stop
+                14: null, //DP L
+                15: null, //DP R Toggle Camera
+            };
+        },
+        axes_map() {
+            return {
+                0: {
+                    ack: this.axes_ack_curvature,
+                }, // LS L-R [-1, 1]
+                1: null, // LS U-D [-1, 1]
+                2: {
+                    ack: this.axes_ack_crab,
+                }, // RS L-R [-1, 1]
+                3: null, // RS U-D [-1, 1]
             };
         },
     },
@@ -99,6 +99,7 @@ export default {
             if (this.gamepad_polling % 5 == 0) {
                 new_gamepad_state.buttons.forEach((button, index) => {
                     const old_button_value = this.gamepad?.buttons[index].value;
+
                     if (button.value !== old_button_value) {
                         if (button.pressed) {
                             document.dispatchEvent(
@@ -123,61 +124,21 @@ export default {
                     }
                 });
 
-                let new_axes_mapping = {
-                    velocity: this.axes_mapping.velocity.value,
-                    crab: this.axes_mapping.crab.value,
-                    curvature: this.axes_mapping.curvature.value,
-                    angular_velocity: this.axes_mapping.angular_velocity.value,
-                };
+                new_gamepad_state.axes.forEach((axes, index) => {
+                    const old_axes_value = this.gamepad?.axes[index];
 
-                new_axes_mapping.velocity =
-                    Math.abs(
-                        new_gamepad_state.axes[this.axes_mapping.velocity.index]
-                    ) > this.axes_mapping.velocity.dead_zone
-                        ? new_gamepad_state.axes[
-                              this.axes_mapping.velocity.index
-                          ]
-                        : 0;
-
-                new_axes_mapping.crab =
-                    Math.abs(
-                        new_gamepad_state.axes[this.axes_mapping.crab.index]
-                    ) > this.axes_mapping.crab.dead_zone
-                        ? new_gamepad_state.axes[this.axes_mapping.crab.index]
-                        : 0;
-
-                new_axes_mapping.curvature =
-                    Math.abs(
-                        new_gamepad_state.axes[
-                            this.axes_mapping.curvature.index
-                        ]
-                    ) > this.axes_mapping.curvature.dead_zone
-                        ? new_gamepad_state.axes[
-                              this.axes_mapping.curvature.index
-                          ]
-                        : 0;
-
-                new_axes_mapping.angular_velocity =
-                    Math.abs(
-                        new_gamepad_state.axes[
-                            this.axes_mapping.angular_velocity.index
-                        ]
-                    ) > this.axes_mapping.angular_velocity.dead_zone
-                        ? new_gamepad_state.axes[
-                              this.axes_mapping.angular_velocity.index
-                          ]
-                        : 0;
-
-                for (var parameter in this.axes_mapping) {
-                    if (
-                        this.axes_mapping[parameter].value !=
-                        new_axes_mapping[parameter]
-                    ) {
-                        this.axes_mapping[parameter].value =
-                            new_axes_mapping[parameter];
-                        this.axes_handler();
+                    if (axes !== old_axes_value) {
+                        document.dispatchEvent(
+                            new CustomEvent('gamepadAxesChange', {
+                                detail: {
+                                    axesIndex: index,
+                                    axesValue: axes,
+                                },
+                            })
+                        );
                     }
-                }
+                });
+
                 this.gamepad = new_gamepad_state;
             }
         },
@@ -199,15 +160,21 @@ export default {
                 if (this.gamepad.index == gamepad_event.index) {
                     this.gamepad = {};
                     cancelAnimationFrame(this.gamepad_polling);
+                    this.raw_tc = 'safe';
+                    this.send_command();
                 }
             }
 
-            console.log('Active gamepad index:', this.gamepad.index);
+            console.log('Active gamepad index:', this.gamepad?.index);
             console.log('Gamepads:', this.gamepads);
         },
-        button_handler(button, pressed) {
+        button_handler(button, value) {
+            if (button == 6) {
+                value = -value;
+            }
+
             if (typeof this.button_map[button] == 'function') {
-                this.button_map[button](pressed);
+                this.button_map[button](value);
             }
         },
         toggle_safe(pressed) {
@@ -225,99 +192,121 @@ export default {
         },
         button_mnvr_type(pressed) {
             if (pressed) {
-                this.mnvr_type = this.mnvr_type == 'ack' ? 'pt' : 'ack';
+                var mnvr_change = this.mnvr_type == 'ack' ? 'pt' : 'ack';
+
+                this.$emit('mnvr_type_change', mnvr_change);
                 this.raw_tc = 'mnvr stop';
                 this.send_command();
             }
         },
-        axes_handler() {
-            if (this.mnvr_type == 'ack') {
-                this.joystics_mnvr_ack();
-            } else {
-                this.joystics_mnvr_pt();
+        stop_command(pressed) {
+            if (pressed) {
+                this.raw_tc = 'mnvr stop';
+                this.send_command();
             }
         },
-        joystics_mnvr_ack() {
-            var rover_velocity = 0;
-            var carb_angle = 0;
-            var curvature = 0;
+        trigger_handler(value) {
+            if (this.mnvr_type == 'ack') {
+                if (value * this.axes_mapping.velocity.value >= 0) {
+                    this.axes_ack_velocity(-value);
+                }
+            } else {
+                if (value * this.axes_mapping.angular_velocity.value >= 0) {
+                    this.axes_pt_angular_velocity(-value);
+                }
+            }
+        },
+        axes_handler(axes, value) {
+            if (typeof this.axes_map?.[axes]?.[this.mnvr_type] == 'function') {
+                this.axes_map[axes][this.mnvr_type](value);
+            }
+        },
+        axes_ack_velocity(value) {
+            this.axes_mapping.velocity.value = 0;
 
-            if (this.axes_mapping.velocity.value != 0) {
-                rover_velocity = (
-                    (Math.max(
-                        Math.abs(this.axes_mapping.velocity.value) -
-                            this.axes_mapping.velocity.dead_zone,
-                        Math.abs(this.axes_mapping.crab.value) -
-                            this.axes_mapping.crab.dead_zone
-                    ) *
-                        -this.axes_mapping.velocity.value *
-                        this.max_rover_velocity) /
-                    (Math.abs(this.axes_mapping.velocity.value) *
+            if (Math.abs(value) > this.axes_mapping.velocity.dead_zone) {
+                this.axes_mapping.velocity.value = (
+                    ((Math.abs(value) - this.axes_mapping.velocity.dead_zone) *
+                        this.max_rover_velocity *
+                        -value) /
+                    (Math.abs(value) *
                         (1 - this.axes_mapping.velocity.dead_zone))
                 ).toFixed(3);
             }
 
-            if (this.axes_mapping.crab.value != 0) {
-                carb_angle = (
-                    ((Math.abs(this.axes_mapping.crab.value) -
-                        this.axes_mapping.crab.dead_zone) *
-                        this.max_crab *
-                        -this.axes_mapping.crab.value) /
-                    (Math.abs(this.axes_mapping.crab.value) *
-                        (1 - this.axes_mapping.crab.dead_zone))
-                ).toFixed(3);
-            }
+            this.axes_ack_command();
+        },
+        axes_ack_curvature(value) {
+            this.axes_mapping.curvature.value = 0;
 
-            if (this.axes_mapping.curvature.value != 0) {
-                curvature = (
-                    ((Math.abs(this.axes_mapping.curvature.value) -
-                        this.axes_mapping.curvature.dead_zone) *
+            if (Math.abs(value) > this.axes_mapping.curvature.dead_zone) {
+                this.axes_mapping.curvature.value = (
+                    ((Math.abs(value) - this.axes_mapping.curvature.dead_zone) *
                         this.max_curvature *
-                        -this.axes_mapping.curvature.value) /
-                    (Math.abs(this.axes_mapping.curvature.value) *
+                        -value) /
+                    (Math.abs(value) *
                         (1 - this.axes_mapping.curvature.dead_zone))
                 ).toFixed(2);
             }
 
-            if (
-                this.raw_tc !=
-                'mnvr ack ' +
-                    rover_velocity +
-                    ' ' +
-                    curvature +
-                    ' ' +
-                    carb_angle
-            ) {
-                this.raw_tc =
-                    'mnvr ack ' +
-                    rover_velocity +
-                    ' ' +
-                    curvature +
-                    ' ' +
-                    carb_angle;
-                this.send_command(false);
-            }
+            this.axes_ack_command();
         },
-        joystics_mnvr_pt() {
-            var angular_velocity = 0;
+        axes_ack_crab(value) {
+            this.axes_mapping.crab.value = 0;
 
-            if (this.axes_mapping.angular_velocity.value != 0) {
-                angular_velocity = (
-                    ((Math.abs(this.axes_mapping.angular_velocity.value) -
+            if (Math.abs(value) > this.axes_mapping.crab.dead_zone) {
+                this.axes_mapping.crab.value = (
+                    ((Math.abs(value) - this.axes_mapping.crab.dead_zone) *
+                        this.max_crab *
+                        -value) /
+                    (Math.abs(value) * (1 - this.axes_mapping.crab.dead_zone))
+                ).toFixed(3);
+            }
+
+            this.axes_ack_command();
+        },
+        axes_pt_angular_velocity(value) {
+            this.axes_mapping.angular_velocity.value = 0;
+
+            if (
+                Math.abs(value) > this.axes_mapping.angular_velocity.dead_zone
+            ) {
+                this.axes_mapping.angular_velocity.value = (
+                    ((Math.abs(value) -
                         this.axes_mapping.angular_velocity.dead_zone) *
                         this.max_angular_velocity *
-                        -this.axes_mapping.angular_velocity.value) /
-                    (Math.abs(this.axes_mapping.angular_velocity.value) *
+                        -value) /
+                    (Math.abs(value) *
                         (1 - this.axes_mapping.angular_velocity.dead_zone))
                 ).toFixed(2);
             }
 
-            if (this.raw_tc != 'mnvr pt ' + angular_velocity) {
-                this.raw_tc = 'mnvr pt ' + angular_velocity;
+            this.axes_pt_command();
+        },
+        axes_ack_command() {
+            let new_raw_tc =
+                'mnvr ack ' +
+                this.axes_mapping.velocity.value +
+                ' ' +
+                this.axes_mapping.curvature.value +
+                ' ' +
+                this.axes_mapping.crab.value;
+
+            if (this.raw_tc != new_raw_tc) {
+                this.raw_tc = new_raw_tc;
                 this.send_command(false);
             }
         },
-        send_command(log=true) {
+        axes_pt_command() {
+            let new_raw_tc =
+                'mnvr pt ' + this.axes_mapping.angular_velocity.value;
+
+            if (this.raw_tc != new_raw_tc) {
+                this.raw_tc = new_raw_tc;
+                this.send_command(false);
+            }
+        },
+        send_command(log = true) {
             this.$emit('controller_command', [this.raw_tc, log]);
             this.$store.dispatch('send_raw_tc', this.raw_tc);
         },
