@@ -85,7 +85,7 @@ export default {
     },
     computed: {
         arm_ctrl_output() {
-            return this.$store.state.tm.arm_ctrl_output;
+            return this.$store.state.tm.arm_ctrl_output.pos_rad;
         },
         button_map() {
             return {
@@ -135,7 +135,7 @@ export default {
                 new_gamepad_state.buttons.forEach((button, index) => {
                     const old_button_value = this.gamepad?.buttons[index].value;
 
-                    if (button.value !== old_button_value) {
+                    if (button.value !== old_button_value || (this.mode_type == 'arm' && (index == 6 || index == 7))) {
                         if (button.pressed) {
                             document.dispatchEvent(
                                 new CustomEvent('gamepadButtonDown', {
@@ -262,9 +262,7 @@ export default {
                     }
                 }
             } else {
-                if (value * this.axes_mapping.grabber.value >= 0) {
-                    this.arm_grabber(-value);
-                }
+                this.arm_grabber(-value);
             }
         },
         axes_handler(axes, value) {
@@ -367,7 +365,7 @@ export default {
                         -value) /
                         (Math.abs(value) *
                             (1 - this.axes_mapping.base.dead_zone)) +
-                    this.arm_ctrl_output.pos_rad.ArmBase;
+                    this.arm_ctrl_output.ArmBase;
                 this.axes_basic_command();
             }
 
@@ -380,7 +378,7 @@ export default {
                         -value) /
                         (Math.abs(value) *
                             (1 - this.axes_mapping.shoulder.dead_zone)) +
-                    this.arm_ctrl_output.pos_rad.ArmShoulder;
+                    this.arm_ctrl_output.ArmShoulder;
 
                 this.axes_basic_command();
             }
@@ -396,7 +394,7 @@ export default {
                         this.axes_mapping.elbow.speed *
                         -value) /
                     (Math.abs(value) *
-                        (1 - this.axes_mapping.elbow.dead_zone)) + this.arm_ctrl_output.pos_rad.ArmElbow
+                        (1 - this.axes_mapping.elbow.dead_zone)) + this.arm_ctrl_output.ArmElbow
                 );
 
                 this.axes_basic_command();
@@ -413,7 +411,7 @@ export default {
                         this.axes_mapping.wrist.speed *
                         -value) /
                     (Math.abs(value) *
-                        (1 - this.axes_mapping.wrist.dead_zone)) + this.arm_ctrl_output.pos_rad.ArmWrist
+                        (1 - this.axes_mapping.wrist.dead_zone)) + this.arm_ctrl_output.ArmWrist
                 );
 
                 this.axes_basic_command();
@@ -430,7 +428,7 @@ export default {
                         this.axes_mapping.grabber.speed *
                         -value) /
                     (Math.abs(value) *
-                        (1 - this.axes_mapping.grabber.dead_zone)) + this.arm_ctrl_output.pos_rad.ArmGrabber
+                        (1 - this.axes_mapping.grabber.dead_zone)) + this.arm_ctrl_output.ArmGrabber
                 );
 
                 this.axes_basic_command();
@@ -443,7 +441,7 @@ export default {
                     BasicRotation: {
                         dems: {
                             pos_rad: {
-                                ArmBase: parseFloat(this.axes_mapping.base.value),
+                                ArmBase: this.axes_mapping.base.value,
                                 ArmShoulder: this.axes_mapping.shoulder.value,
                                 ArmElbow: this.axes_mapping.elbow.value,
                                 ArmWrist: this.axes_mapping.wrist.value,
