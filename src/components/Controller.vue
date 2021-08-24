@@ -30,28 +30,28 @@ export default {
             },
             base: {
                 value: 0,
-                dead_zone: 0.1,
-                speed: 0.035,
+                dead_zone: 0.15,
+                speed: 0.07,
             },
             shoulder: {
                 value: 0,
-                dead_zone: 0.1,
-                speed: 0.035,
+                dead_zone: 0.15,
+                speed: 0.07,
             },
             elbow: {
                 value: 0,
-                dead_zone: 0.1,
-                speed: 0.035,
+                dead_zone: 0.15,
+                speed: 0.07,
             },
             wrist: {
                 value: 0,
-                dead_zone: 0.1,
-                speed: 0.035,
+                dead_zone: 0.15,
+                speed: 0.07,
             },
             grabber: {
                 value: 0,
-                dead_zone: 0.1,
-                speed: 0.035,
+                dead_zone: 0.15,
+                speed: 0.07,
             },
         },
         max_rover_velocity: 0.175, //TEMP, requires rover params
@@ -131,7 +131,7 @@ export default {
             this.gamepad_polling = requestAnimationFrame(this.updateGamepad);
             let new_gamepad_state = navigator.getGamepads()[this.gamepad.index];
 
-            if (this.gamepad_polling % 5 == 0) {
+            if (this.gamepad_polling % 5 == 0 || this.mode_type == 'arm') {
                 new_gamepad_state.buttons.forEach((button, index) => {
                     const old_button_value = this.gamepad?.buttons[index].value;
 
@@ -243,7 +243,6 @@ export default {
         button_control_mode(pressed) {
             if (pressed) {
                 var mode_change = this.mode_type == 'mnvr' ? 'arm' : 'mnvr';
-                console.log(this.mode_type);
 
                 this.$emit('mode_change', mode_change);
                 this.raw_tc =
@@ -252,13 +251,19 @@ export default {
             }
         },
         trigger_handler(value) {
-            if (this.mnvr_type == 'ack') {
-                if (value * this.axes_mapping.velocity.value >= 0) {
-                    this.axes_ack_velocity(-value);
+            if (this.mode_type == 'mnvr') {
+                if (this.mnvr_type == 'ack') {
+                    if (value * this.axes_mapping.velocity.value >= 0) {
+                        this.axes_ack_velocity(-value);
+                    }
+                } else {
+                    if (value * this.axes_mapping.angular_velocity.value >= 0) {
+                        this.axes_pt_angular_velocity(-value);
+                    }
                 }
             } else {
-                if (value * this.axes_mapping.angular_velocity.value >= 0) {
-                    this.axes_pt_angular_velocity(-value);
+                if (value * this.axes_mapping.grabber.value >= 0) {
+                    this.arm_grabber(-value);
                 }
             }
         },
@@ -363,7 +368,6 @@ export default {
                         (Math.abs(value) *
                             (1 - this.axes_mapping.base.dead_zone)) +
                     this.arm_ctrl_output.pos_rad.ArmBase;
-
                 this.axes_basic_command();
             }
 
@@ -456,9 +460,10 @@ export default {
                     }
                 }
             }
-
-            this.tc = new_tc;
-            this.send_command(false);
+            if (this.tc != new_tc) {
+                this.tc = new_tc;
+                this.send_command(false);
+            }
         },
         send_raw_command(log = true) {
             this.$emit('controller_command', [this.raw_tc, log]);
