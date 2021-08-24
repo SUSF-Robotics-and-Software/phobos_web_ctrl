@@ -355,8 +355,6 @@ export default {
             }
         },
         arm_base(value) {
-            this.axes_mapping.base.value = this.arm_ctrl_output.pos_rad.ArmBase;
-
             if (Math.abs(value) > this.axes_mapping.base.dead_zone) {
                 this.axes_mapping.base.value =
                     ((Math.abs(value) - this.axes_mapping.base.dead_zone) *
@@ -365,13 +363,12 @@ export default {
                         (Math.abs(value) *
                             (1 - this.axes_mapping.base.dead_zone)) +
                     this.arm_ctrl_output.pos_rad.ArmBase;
+
+                this.axes_basic_command();
             }
 
-            this.axes_basic_command();
         },
         arm_shoulder(value) {
-            this.axes_mapping.shoulder.value = this.arm_ctrl_output.pos_rad.ArmShoulder;
-
             if (Math.abs(value) > this.axes_mapping.shoulder.dead_zone) {
                 this.axes_mapping.shoulder.value =
                     ((Math.abs(value) - this.axes_mapping.shoulder.dead_zone) *
@@ -380,13 +377,12 @@ export default {
                         (Math.abs(value) *
                             (1 - this.axes_mapping.shoulder.dead_zone)) +
                     this.arm_ctrl_output.pos_rad.ArmShoulder;
+
+                this.axes_basic_command();
             }
 
-            this.axes_basic_command();
         },
         arm_elbow(value) {
-            this.axes_mapping.elbow.value = this.arm_ctrl_output.pos_rad.ArmElbow;
-
             if (
                 Math.abs(value) > this.axes_mapping.elbow.dead_zone
             ) {
@@ -398,13 +394,12 @@ export default {
                     (Math.abs(value) *
                         (1 - this.axes_mapping.elbow.dead_zone)) + this.arm_ctrl_output.pos_rad.ArmElbow
                 );
+
+                this.axes_basic_command();
             }
 
-            this.axes_basic_command();
         },
         arm_wrist(value) {
-            this.axes_mapping.wrist.value = this.arm_ctrl_output.pos_rad.ArmWrist;
-
             if (
                 Math.abs(value) > this.axes_mapping.wrist.dead_zone
             ) {
@@ -416,13 +411,12 @@ export default {
                     (Math.abs(value) *
                         (1 - this.axes_mapping.wrist.dead_zone)) + this.arm_ctrl_output.pos_rad.ArmWrist
                 );
+
+                this.axes_basic_command();
             }
 
-            this.axes_basic_command();
         },
         arm_grabber(value) {
-            this.axes_mapping.grabber.value = this.arm_ctrl_output.pos_rad.ArmGrabber;
-
             if (
                 Math.abs(value) > this.axes_mapping.grabber.dead_zone
             ) {
@@ -434,9 +428,10 @@ export default {
                     (Math.abs(value) *
                         (1 - this.axes_mapping.grabber.dead_zone)) + this.arm_ctrl_output.pos_rad.ArmGrabber
                 );
+
+                this.axes_basic_command();
             }
 
-            this.axes_basic_command();
         },
         axes_basic_command() {
             let new_tc = {

@@ -3,7 +3,6 @@
         <v-card>
             <v-card-text class="py-0 text-center text-h6">
                 Arm angles (deg)
-                {{ Object.keys(arm_angles_deg).length }}
                 <v-divider></v-divider>
                 <v-row class="text-center">
                     <v-col
