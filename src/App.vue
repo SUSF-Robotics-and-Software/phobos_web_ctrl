@@ -33,7 +33,10 @@
                         </v-btn>
                         <!-- Shows current active command -->
                         <v-card>
-                            <ActiveCommand ref="ActiveCommand" :mnvr_type="mnvr_type"/>
+                            <ActiveCommand
+                                ref="ActiveCommand"
+                                :mnvr_type="mnvr_type"
+                            />
                         </v-card>
                         <!-- Terminal control for rover -->
                         <TextTcInput
@@ -45,7 +48,8 @@
                             <CamImageView />
                         </v-card>
                         <div>
-                            <Telemetry />
+                            <LocoTelemetry />
+                            <ArmTelemetry />
                         </div>
                     </v-col>
                     <v-col sm="2">
@@ -58,8 +62,10 @@
         <Controller
             :safe="safe"
             :mnvr_type="mnvr_type"
+            :mode_type="mode_type"
             @controller_command="active_command_check($event[0], $event[1])"
             @mnvr_type_change="mnvr_type = $event"
+            @mode_change="mode_type = $event"
         />
     </v-app>
 </template>
@@ -70,9 +76,17 @@
 //TODO Settings menu
 //TODO Comment
 
+// Basic Arm Control Map
+// LS L-R Base
+// LS U-D Shoulder
+// RS L-R Wrist
+// RS U-D Elbow
+// Triggers Claw
+
 import TextTcInput from './components/TextTcInput';
 import CamImageView from './components/CamImageView';
-import Telemetry from './components/Telemetry';
+import LocoTelemetry from './components/LocoTelemetry';
+import ArmTelemetry from './components/ArmTelemetry';
 import Controller from './components/Controller';
 import ActiveCommand from './components/ActiveCommand';
 import CommandLog from './components/CommandLog';
@@ -83,7 +97,8 @@ export default {
     components: {
         TextTcInput,
         CamImageView,
-        Telemetry,
+        LocoTelemetry,
+        ArmTelemetry,
         Controller,
         ActiveCommand,
         CommandLog,
@@ -91,6 +106,7 @@ export default {
 
     data: () => ({
         mnvr_type: 'ack',
+        mode_type: 'mnvr',
     }),
 
     created() {

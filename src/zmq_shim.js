@@ -67,7 +67,7 @@ async function run_tm() {
 
         // Get all content from ZMQ
         for await (const [topic] of zmq_tm_sock) {
-            console.log(`TM - got ${topic}`);
+            //console.log(`TM - got ${topic}`);
 
             // Forward to websocket
             connection.send(topic.toString());

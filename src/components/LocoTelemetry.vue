@@ -13,12 +13,12 @@
                 </v-row>
                 <v-row
                     no-gutters
-                    v-for="row in loco_ctrl_mapping()"
+                    v-for="(left_wheel_angles, row) in wheel_angles_L_deg"
                     v-bind:key="row"
                 >
                     <v-col sm="2.5">
                         <v-divider></v-divider>
-                        {{ row }}L: {{ wheel_angles_L_deg[row] }}
+                        {{ row }}L: {{ left_wheel_angles }}
                     </v-col>
                     <v-divider vertical></v-divider>
                     <v-col sm="2.5">
@@ -50,72 +50,66 @@ export default {
         wheel_angles_L_deg() {
             return {
                 F: (
-                    (this.loco_ctrl_output.pos_rad.StrFL * 360) /
-                    (2 * Math.PI)
+                    (this.loco_ctrl_output.pos_rad.StrFL * 180) /
+                    Math.PI
                 ).toFixed(0),
                 M: (
-                    (this.loco_ctrl_output.pos_rad.StrML * 360) /
-                    (2 * Math.PI)
+                    (this.loco_ctrl_output.pos_rad.StrML * 180) /
+                    Math.PI
                 ).toFixed(0),
                 R: (
-                    (this.loco_ctrl_output.pos_rad.StrRL * 360) /
-                    (2 * Math.PI)
+                    (this.loco_ctrl_output.pos_rad.StrRL * 180) /
+                    Math.PI
                 ).toFixed(0),
             };
         },
         wheel_angles_R_deg() {
             return {
                 F: (
-                    (this.loco_ctrl_output.pos_rad.StrFR * 360) /
-                    (2 * Math.PI)
+                    (this.loco_ctrl_output.pos_rad.StrFR * 180) /
+                    Math.PI
                 ).toFixed(0),
                 M: (
-                    (this.loco_ctrl_output.pos_rad.StrMR * 360) /
-                    (2 * Math.PI)
+                    (this.loco_ctrl_output.pos_rad.StrMR * 180) /
+                    Math.PI
                 ).toFixed(0),
                 R: (
-                    (this.loco_ctrl_output.pos_rad.StrRR * 360) /
-                    (2 * Math.PI)
+                    (this.loco_ctrl_output.pos_rad.StrRR * 180) /
+                    Math.PI
                 ).toFixed(0),
             };
         },
         wheel_speeds_L_degs() {
             return {
                 F: (
-                    (this.loco_ctrl_output.speed_rads.DrvFL * 360) /
-                    (2 * Math.PI)
+                    (this.loco_ctrl_output.speed_rads.DrvFL * 180) /
+                    Math.PI
                 ).toFixed(0),
                 M: (
-                    (this.loco_ctrl_output.speed_rads.DrvML * 360) /
-                    (2 * Math.PI)
+                    (this.loco_ctrl_output.speed_rads.DrvML * 180) /
+                    Math.PI
                 ).toFixed(0),
                 R: (
-                    (this.loco_ctrl_output.speed_rads.DrvRL * 360) /
-                    (2 * Math.PI)
+                    (this.loco_ctrl_output.speed_rads.DrvRL * 180) /
+                    Math.PI
                 ).toFixed(0),
             };
         },
         wheel_speeds_R_degs() {
             return {
                 F: (
-                    (this.loco_ctrl_output.speed_rads.DrvFR * 360) /
-                    (2 * Math.PI)
+                    (this.loco_ctrl_output.speed_rads.DrvFR * 180) /
+                    Math.PI
                 ).toFixed(0),
                 M: (
-                    (this.loco_ctrl_output.speed_rads.DrvMR * 360) /
-                    (2 * Math.PI)
+                    (this.loco_ctrl_output.speed_rads.DrvMR * 180) /
+                    Math.PI
                 ).toFixed(0),
                 R: (
-                    (this.loco_ctrl_output.speed_rads.DrvRR * 360) /
-                    (2 * Math.PI)
+                    (this.loco_ctrl_output.speed_rads.DrvRR * 180) /
+                    Math.PI
                 ).toFixed(0),
             };
-        },
-    },
-
-    methods: {
-        loco_ctrl_mapping() {
-            return ['F', 'M', 'R'];
         },
     },
 };

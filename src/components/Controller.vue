@@ -27,6 +27,31 @@ export default {
                 value: 0,
                 dead_zone: 0.1,
             },
+            base: {
+                value: 0,
+                dead_zone: 0.1,
+                speed: 0.035,
+            },
+            shoulder: {
+                value: 0,
+                dead_zone: 0.1,
+                speed: 0.035,
+            },
+            elbow: {
+                value: 0,
+                dead_zone: 0.1,
+                speed: 0.035,
+            },
+            wrist: {
+                value: 0,
+                dead_zone: 0.1,
+                speed: 0.035,
+            },
+            grabber: {
+                value: 0,
+                dead_zone: 0.1,
+                speed: 0.035,
+            },
         },
         max_rover_velocity: 0.175, //TEMP, requires rover params
         max_crab: Math.PI / 2, //TEMP
@@ -34,7 +59,7 @@ export default {
         max_angular_velocity: 1.2, //TEMP
     }),
 
-    props: ['safe', 'mnvr_type'],
+    props: ['safe', 'mnvr_type', 'mode_type'],
 
     created: function() {
         window.addEventListener(
@@ -58,6 +83,9 @@ export default {
         });
     },
     computed: {
+        arm_ctrl_output() {
+            return this.$store.state.tm.arm_ctrl_output;
+        },
         button_map() {
             return {
                 0: null, //A
@@ -74,7 +102,7 @@ export default {
                 11: null, //RS
                 12: this.toggle_safe, //DP U Toggle Safe
                 13: this.stop_command, //DP D Command Stop
-                14: null, //DP L
+                14: this.button_control_mode, //DP L
                 15: null, //DP R Toggle Camera
             };
         },
@@ -82,12 +110,18 @@ export default {
             return {
                 0: {
                     ack: this.axes_ack_curvature,
+                    basic: this.arm_base,
                 }, // LS L-R [-1, 1]
-                1: null, // LS U-D [-1, 1]
+                1: {
+                    basic: this.arm_shoulder,
+                }, // LS U-D [-1, 1]
                 2: {
                     ack: this.axes_ack_crab,
+                    basic: this.arm_wrist,
                 }, // RS L-R [-1, 1]
-                3: null, // RS U-D [-1, 1]
+                3: {
+                    basic: this.arm_elbow
+                }, // RS U-D [-1, 1]
             };
         },
     },
@@ -205,6 +239,16 @@ export default {
                 this.send_command();
             }
         },
+        button_control_mode(pressed) {
+            if (pressed) {
+                var mode_change = this.mode_type == 'mnvr' ? 'arm' : 'mnvr';
+                console.log(this.mode_type);
+
+                this.$emit('mode_change', mode_change)
+                this.raw_tc = this.mode_type == 'mnvr' ? 'mnvr stop' : 'arm stop';
+                this.send_command();
+            }
+        },
         trigger_handler(value) {
             if (this.mnvr_type == 'ack') {
                 if (value * this.axes_mapping.velocity.value >= 0) {
@@ -217,8 +261,10 @@ export default {
             }
         },
         axes_handler(axes, value) {
-            if (typeof this.axes_map?.[axes]?.[this.mnvr_type] == 'function') {
-                this.axes_map[axes][this.mnvr_type](value);
+            var control = this.mode_type == 'mnvr' ? this.mnvr_type : 'basic';
+
+            if (typeof this.axes_map?.[axes]?.[control] == 'function') {
+                this.axes_map[axes][control](value);
             }
         },
         axes_ack_velocity(value) {
@@ -300,6 +346,114 @@ export default {
         axes_pt_command() {
             let new_raw_tc =
                 'mnvr pt ' + this.axes_mapping.angular_velocity.value;
+
+            if (this.raw_tc != new_raw_tc) {
+                this.raw_tc = new_raw_tc;
+                this.send_command(false);
+            }
+        },
+        arm_base(value) {
+            this.axes_mapping.base.value = 0;
+
+            if (
+                Math.abs(value) > this.axes_mapping.base.dead_zone
+            ) {
+                this.axes_mapping.base.value = (
+                    ((Math.abs(value) -
+                        this.axes_mapping.base.dead_zone) *
+                        this.axes_mapping.base.speed *
+                        -value) /
+                    (Math.abs(value) *
+                        (1 - this.axes_mapping.base.dead_zone))
+                ).toFixed(2);
+            }
+
+            this.axes_basic_command();
+        },
+        arm_shoulder(value) {
+            this.axes_mapping.shoulder.value = 0;
+
+            if (
+                Math.abs(value) > this.axes_mapping.shoulder.dead_zone
+            ) {
+                this.axes_mapping.shoulder.value = (
+                    ((Math.abs(value) -
+                        this.axes_mapping.shoulder.dead_zone) *
+                        this.axes_mapping.shoulder.speed *
+                        -value) /
+                    (Math.abs(value) *
+                        (1 - this.axes_mapping.shoulder.dead_zone))
+                ).toFixed(2);
+            }
+
+            this.axes_basic_command();
+        },
+        arm_elbow(value) {
+            this.axes_mapping.elbow.value = 0;
+
+            if (
+                Math.abs(value) > this.axes_mapping.elbow.dead_zone
+            ) {
+                this.axes_mapping.elbow.value = (
+                    ((Math.abs(value) -
+                        this.axes_mapping.elbow.dead_zone) *
+                        this.axes_mapping.elbow.speed *
+                        -value) /
+                    (Math.abs(value) *
+                        (1 - this.axes_mapping.elbow.dead_zone))
+                ).toFixed(2);
+            }
+
+            this.axes_basic_command();
+        },
+        arm_wrist(value) {
+            this.axes_mapping.wrist.value = 0;
+
+            if (
+                Math.abs(value) > this.axes_mapping.wrist.dead_zone
+            ) {
+                this.axes_mapping.wrist.value = (
+                    ((Math.abs(value) -
+                        this.axes_mapping.wrist.dead_zone) *
+                        this.axes_mapping.wrist.speed *
+                        -value) /
+                    (Math.abs(value) *
+                        (1 - this.axes_mapping.wrist.dead_zone))
+                ).toFixed(2);
+            }
+
+            this.axes_basic_command();
+        },
+        arm_grabber(value) {
+            this.axes_mapping.grabber.value = 0;
+
+            if (
+                Math.abs(value) > this.axes_mapping.grabber.dead_zone
+            ) {
+                this.axes_mapping.grabber.value = (
+                    ((Math.abs(value) -
+                        this.axes_mapping.grabber.dead_zone) *
+                        this.axes_mapping.grabber.speed *
+                        -value) /
+                    (Math.abs(value) *
+                        (1 - this.axes_mapping.grabber.dead_zone))
+                ).toFixed(2);
+            }
+
+            this.axes_basic_command();
+        },
+        axes_basic_command() {
+            let new_raw_tc = {
+                ArmCmd: {
+                    basic: {
+                        ArmBase: this.axes_mapping.base.value,
+                        ArmShoulder: this.axes_mapping.shoulder.value,
+                        ArmElbow: this.axes_mapping.elbow.value,
+                        ArmWrist: this.axes_mapping.wrist.value,
+                        ArmGrabber: this.axes_mapping.grabber.value,
+                    }
+                }
+            }
 
             if (this.raw_tc != new_raw_tc) {
                 this.raw_tc = new_raw_tc;

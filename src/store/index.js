@@ -18,6 +18,7 @@ export default new Vuex.Store({
             safe: false,
             safe_cause: 'null',
             loco_ctrl_output: { pos_rad: {}, speed_rads: {} },
+            arm_ctrl_output: { pos_rad: {}, speed_rads: {} },
         },
     },
     mutations: {},
