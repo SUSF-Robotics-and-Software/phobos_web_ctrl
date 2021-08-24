@@ -54,7 +54,6 @@
                     </v-col>
                     <v-col sm="2">
                         <CommandLog ref="UpdateLog" :sim_time_s="sim_time_s" />
-                        {{ arm_ctrl_output }}
                     </v-col>
                 </v-row>
             </v-container>

@@ -85,7 +85,7 @@ export default {
     },
     computed: {
         arm_ctrl_output() {
-            return this.$store.state.tm.arm_ctrl_output.pos_rad;
+            return this.$store.state.tm.arm_ctrl_output;
         },
         button_map() {
             return {
@@ -121,7 +121,7 @@ export default {
                     basic: this.arm_wrist,
                 }, // RS L-R [-1, 1]
                 3: {
-                    basic: this.arm_elbow
+                    basic: this.arm_elbow,
                 }, // RS U-D [-1, 1]
             };
         },
@@ -162,7 +162,7 @@ export default {
                 new_gamepad_state.axes.forEach((axes, index) => {
                     const old_axes_value = this.gamepad?.axes[index];
 
-                    if (axes !== old_axes_value) {
+                    if (axes !== old_axes_value || this.mode_type == 'arm') {
                         document.dispatchEvent(
                             new CustomEvent('gamepadAxesChange', {
                                 detail: {
@@ -245,8 +245,9 @@ export default {
                 var mode_change = this.mode_type == 'mnvr' ? 'arm' : 'mnvr';
                 console.log(this.mode_type);
 
-                this.$emit('mode_change', mode_change)
-                this.raw_tc = this.mode_type == 'mnvr' ? 'mnvr stop' : 'arm stop';
+                this.$emit('mode_change', mode_change);
+                this.raw_tc =
+                    this.mode_type == 'mnvr' ? 'mnvr stop' : 'arm stop';
                 this.send_raw_command();
             }
         },
@@ -354,43 +355,37 @@ export default {
             }
         },
         arm_base(value) {
-            this.axes_mapping.base.value = 0;
+            this.axes_mapping.base.value = this.arm_ctrl_output.pos_rad.ArmBase;
 
-            if (
-                Math.abs(value) > this.axes_mapping.base.dead_zone
-            ) {
-                this.axes_mapping.base.value = (
-                    ((Math.abs(value) -
-                        this.axes_mapping.base.dead_zone) *
+            if (Math.abs(value) > this.axes_mapping.base.dead_zone) {
+                this.axes_mapping.base.value =
+                    ((Math.abs(value) - this.axes_mapping.base.dead_zone) *
                         this.axes_mapping.base.speed *
                         -value) /
-                    (Math.abs(value) *
-                        (1 - this.axes_mapping.base.dead_zone))
-                );
+                        (Math.abs(value) *
+                            (1 - this.axes_mapping.base.dead_zone)) +
+                    this.arm_ctrl_output.pos_rad.ArmBase;
             }
 
             this.axes_basic_command();
         },
         arm_shoulder(value) {
-            this.axes_mapping.shoulder.value = 0;
+            this.axes_mapping.shoulder.value = this.arm_ctrl_output.pos_rad.ArmShoulder;
 
-            if (
-                Math.abs(value) > this.axes_mapping.shoulder.dead_zone
-            ) {
-                this.axes_mapping.shoulder.value = (
-                    ((Math.abs(value) -
-                        this.axes_mapping.shoulder.dead_zone) *
+            if (Math.abs(value) > this.axes_mapping.shoulder.dead_zone) {
+                this.axes_mapping.shoulder.value =
+                    ((Math.abs(value) - this.axes_mapping.shoulder.dead_zone) *
                         this.axes_mapping.shoulder.speed *
                         -value) /
-                    (Math.abs(value) *
-                        (1 - this.axes_mapping.shoulder.dead_zone))
-                );
+                        (Math.abs(value) *
+                            (1 - this.axes_mapping.shoulder.dead_zone)) +
+                    this.arm_ctrl_output.pos_rad.ArmShoulder;
             }
 
             this.axes_basic_command();
         },
         arm_elbow(value) {
-            this.axes_mapping.elbow.value = 0;
+            this.axes_mapping.elbow.value = this.arm_ctrl_output.pos_rad.ArmElbow;
 
             if (
                 Math.abs(value) > this.axes_mapping.elbow.dead_zone
@@ -401,14 +396,14 @@ export default {
                         this.axes_mapping.elbow.speed *
                         -value) /
                     (Math.abs(value) *
-                        (1 - this.axes_mapping.elbow.dead_zone))
+                        (1 - this.axes_mapping.elbow.dead_zone)) + this.arm_ctrl_output.pos_rad.ArmElbow
                 );
             }
 
             this.axes_basic_command();
         },
         arm_wrist(value) {
-            this.axes_mapping.wrist.value = 0;
+            this.axes_mapping.wrist.value = this.arm_ctrl_output.pos_rad.ArmWrist;
 
             if (
                 Math.abs(value) > this.axes_mapping.wrist.dead_zone
@@ -419,14 +414,14 @@ export default {
                         this.axes_mapping.wrist.speed *
                         -value) /
                     (Math.abs(value) *
-                        (1 - this.axes_mapping.wrist.dead_zone))
+                        (1 - this.axes_mapping.wrist.dead_zone)) + this.arm_ctrl_output.pos_rad.ArmWrist
                 );
             }
 
             this.axes_basic_command();
         },
         arm_grabber(value) {
-            this.axes_mapping.grabber.value = 0;
+            this.axes_mapping.grabber.value = this.arm_ctrl_output.pos_rad.ArmGrabber;
 
             if (
                 Math.abs(value) > this.axes_mapping.grabber.dead_zone
@@ -437,7 +432,7 @@ export default {
                         this.axes_mapping.grabber.speed *
                         -value) /
                     (Math.abs(value) *
-                        (1 - this.axes_mapping.grabber.dead_zone))
+                        (1 - this.axes_mapping.grabber.dead_zone)) + this.arm_ctrl_output.pos_rad.ArmGrabber
                 );
             }
 
@@ -467,10 +462,8 @@ export default {
                 }
             }
 
-            if (this.tc != new_tc) {
-                this.tc = new_tc;
-                this.send_command(false);
-            }
+            this.tc = new_tc;
+            this.send_command(false);
         },
         send_raw_command(log = true) {
             this.$emit('controller_command', [this.raw_tc, log]);
