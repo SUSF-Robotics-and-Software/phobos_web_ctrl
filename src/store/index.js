@@ -7,6 +7,7 @@ export default new Vuex.Store({
     state: {
         tc: {
             raw: '',
+            object: null,
             send_status: 'waiting',
             waiting_timeout: null,
             connection: null,
@@ -69,6 +70,29 @@ export default new Vuex.Store({
 
                 // Pack the raw TC in a JSON object
                 const data = JSON.stringify({ raw_tc: raw_tc });
+
+                // Send the TC
+                context.state.tc.connection.send(data);
+
+                // Set the send status as sending
+                context.state.tc.send_status = 'sending';
+            }
+        },
+        send_tc(context, tc) {
+            // Clear timeout if needed
+            if (context.state.tc.waiting_timeout !== null) {
+                clearTimeout(context.state.tc.waiting_timeout);
+            }
+
+            // If not connected emmit error event
+            if (context.state.tc.connection === null) {
+                console.log('Cannot send TC - disconnected');
+            } else {
+                // Set the raw TC
+                context.state.tc.object = tc;
+
+                // Pack the raw TC in a JSON object
+                const data = JSON.stringify(tc);
 
                 // Send the TC
                 context.state.tc.connection.send(data);

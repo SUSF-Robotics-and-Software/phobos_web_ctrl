@@ -40,15 +40,16 @@ export default {
     methods: {
         active_command_check(command) {
             if (typeof command == 'object') {
-                let base_angle = (command.ArmCmd.basic.ArmBase * 180) / Math.Pi;
+                let base_angle = (command.ArmCmd.BasicRotation.dems.pos_rad.ArmBase * 180) / Math.Pi;
+                //console.log(typeof command.ArmCmd.BasicRotation.dems.pos_rad.ArmBase * 180, typeof Math.Pi);
                 let shoulder_angle =
-                    (command.ArmCmd.basic.ArmShoulder * 180) / Math.Pi;
+                    (command.ArmCmd.BasicRotation.dems.pos_rad.ArmShoulder * 180) / Math.Pi;
                 let elbow_angle =
-                    (command.ArmCmd.basic.ArmElbow * 180) / Math.Pi;
+                    (command.ArmCmd.BasicRotation.dems.pos_rad.ArmElbow * 180) / Math.Pi;
                 let wrist_angle =
-                    (command.ArmCmd.basic.ArmWrist * 180) / Math.Pi;
+                    (command.ArmCmd.BasicRotation.dems.pos_rad.ArmWrist * 180) / Math.Pi;
                 let grabber_angle =
-                    (command.ArmCmd.basic.ArmGrabber * 180) / Math.Pi;
+                    (command.ArmCmd.BasicRotation.dems.pos_rad.ArmGrabber * 180) / Math.Pi;
                 this.active_command = [
                     ['base (deg) ', base_angle],
                     ['Shoulder (deg) ', shoulder_angle],
@@ -57,7 +58,6 @@ export default {
                     ['Grabber (deg) ', grabber_angle],
                 ];
             } else {
-                console.log(typeof command);
                 command = command.split(' ');
 
                 if (command[0] == 'mnvr') {

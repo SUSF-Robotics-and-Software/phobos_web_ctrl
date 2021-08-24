@@ -10,6 +10,7 @@ export default {
         gamepad: null,
         gamepad_polling: null,
         raw_tc: '',
+        tc: null,
         axes_mapping: {
             velocity: {
                 value: 0,
@@ -195,7 +196,7 @@ export default {
                     this.gamepad = {};
                     cancelAnimationFrame(this.gamepad_polling);
                     this.raw_tc = 'safe';
-                    this.send_command();
+                    this.send_raw_command();
                 }
             }
 
@@ -215,11 +216,11 @@ export default {
             if (this.safe && pressed) {
                 this.held_button[0] = setTimeout(() => {
                     this.raw_tc = 'unsafe';
-                    this.send_command();
+                    this.send_raw_command();
                 }, 300);
             } else if (pressed) {
                 this.raw_tc = 'safe';
-                this.send_command();
+                this.send_raw_command();
             } else {
                 clearTimeout(this.held_button[0]);
             }
@@ -230,13 +231,13 @@ export default {
 
                 this.$emit('mnvr_type_change', mnvr_change);
                 this.raw_tc = 'mnvr stop';
-                this.send_command();
+                this.send_raw_command();
             }
         },
         stop_command(pressed) {
             if (pressed) {
                 this.raw_tc = 'mnvr stop';
-                this.send_command();
+                this.send_raw_command();
             }
         },
         button_control_mode(pressed) {
@@ -246,7 +247,7 @@ export default {
 
                 this.$emit('mode_change', mode_change)
                 this.raw_tc = this.mode_type == 'mnvr' ? 'mnvr stop' : 'arm stop';
-                this.send_command();
+                this.send_raw_command();
             }
         },
         trigger_handler(value) {
@@ -340,7 +341,7 @@ export default {
 
             if (this.raw_tc != new_raw_tc) {
                 this.raw_tc = new_raw_tc;
-                this.send_command(false);
+                this.send_raw_command(false);
             }
         },
         axes_pt_command() {
@@ -349,7 +350,7 @@ export default {
 
             if (this.raw_tc != new_raw_tc) {
                 this.raw_tc = new_raw_tc;
-                this.send_command(false);
+                this.send_raw_command(false);
             }
         },
         arm_base(value) {
@@ -365,7 +366,7 @@ export default {
                         -value) /
                     (Math.abs(value) *
                         (1 - this.axes_mapping.base.dead_zone))
-                ).toFixed(2);
+                );
             }
 
             this.axes_basic_command();
@@ -383,7 +384,7 @@ export default {
                         -value) /
                     (Math.abs(value) *
                         (1 - this.axes_mapping.shoulder.dead_zone))
-                ).toFixed(2);
+                );
             }
 
             this.axes_basic_command();
@@ -401,7 +402,7 @@ export default {
                         -value) /
                     (Math.abs(value) *
                         (1 - this.axes_mapping.elbow.dead_zone))
-                ).toFixed(2);
+                );
             }
 
             this.axes_basic_command();
@@ -419,7 +420,7 @@ export default {
                         -value) /
                     (Math.abs(value) *
                         (1 - this.axes_mapping.wrist.dead_zone))
-                ).toFixed(2);
+                );
             }
 
             this.axes_basic_command();
@@ -437,33 +438,48 @@ export default {
                         -value) /
                     (Math.abs(value) *
                         (1 - this.axes_mapping.grabber.dead_zone))
-                ).toFixed(2);
+                );
             }
 
             this.axes_basic_command();
         },
         axes_basic_command() {
-            let new_raw_tc = {
+            let new_tc = {
                 ArmCmd: {
-                    basic: {
-                        ArmBase: this.axes_mapping.base.value,
-                        ArmShoulder: this.axes_mapping.shoulder.value,
-                        ArmElbow: this.axes_mapping.elbow.value,
-                        ArmWrist: this.axes_mapping.wrist.value,
-                        ArmGrabber: this.axes_mapping.grabber.value,
+                    BasicRotation: {
+                        dems: {
+                            pos_rad: {
+                                ArmBase: parseFloat(this.axes_mapping.base.value),
+                                ArmShoulder: this.axes_mapping.shoulder.value,
+                                ArmElbow: this.axes_mapping.elbow.value,
+                                ArmWrist: this.axes_mapping.wrist.value,
+                                ArmGrabber: this.axes_mapping.grabber.value,
+                            },
+                            speed_rads: {
+                                ArmBase: 0,
+                                ArmShoulder: 0,
+                                ArmElbow: 0,
+                                ArmWrist: 0,
+                                ArmGrabber: 0,
+                            },
+                        }
                     }
                 }
             }
 
-            if (this.raw_tc != new_raw_tc) {
-                this.raw_tc = new_raw_tc;
+            if (this.tc != new_tc) {
+                this.tc = new_tc;
                 this.send_command(false);
             }
         },
-        send_command(log = true) {
+        send_raw_command(log = true) {
             this.$emit('controller_command', [this.raw_tc, log]);
             this.$store.dispatch('send_raw_tc', this.raw_tc);
         },
+        send_command(log = true) {
+            this.$emit('controller_command', [this.tc, log]);
+            this.$store.dispatch('send_tc', this.tc);
+        }
     },
 };
 </script>
