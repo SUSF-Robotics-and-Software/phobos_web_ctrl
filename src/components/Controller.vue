@@ -85,7 +85,7 @@ export default {
     },
     computed: {
         arm_ctrl_output() {
-            return this.$store.state.tm.arm_ctrl_output;
+            return this.$store.state.tm.arm_ctrl_output.pos_rad;
         },
         button_map() {
             return {

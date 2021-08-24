@@ -40,16 +40,15 @@ export default {
     methods: {
         active_command_check(command) {
             if (typeof command == 'object') {
-                let base_angle = (command.ArmCmd.BasicRotation.dems.pos_rad.ArmBase * 180) / Math.Pi;
-                //console.log(typeof command.ArmCmd.BasicRotation.dems.pos_rad.ArmBase * 180, typeof Math.Pi);
+                let base_angle = (command.ArmCmd.BasicRotation.dems.pos_rad.ArmBase * 180) / Math.PI;
                 let shoulder_angle =
-                    (command.ArmCmd.BasicRotation.dems.pos_rad.ArmShoulder * 180) / Math.Pi;
+                    (command.ArmCmd.BasicRotation.dems.pos_rad.ArmShoulder * 180) / Math.PI;
                 let elbow_angle =
-                    (command.ArmCmd.BasicRotation.dems.pos_rad.ArmElbow * 180) / Math.Pi;
+                    (command.ArmCmd.BasicRotation.dems.pos_rad.ArmElbow * 180) / Math.PI;
                 let wrist_angle =
-                    (command.ArmCmd.BasicRotation.dems.pos_rad.ArmWrist * 180) / Math.Pi;
+                    (command.ArmCmd.BasicRotation.dems.pos_rad.ArmWrist * 180) / Math.PI;
                 let grabber_angle =
-                    (command.ArmCmd.BasicRotation.dems.pos_rad.ArmGrabber * 180) / Math.Pi;
+                    (command.ArmCmd.BasicRotation.dems.pos_rad.ArmGrabber * 180) / Math.PI;
                 this.active_command = [
                     ['base (deg) ', base_angle],
                     ['Shoulder (deg) ', shoulder_angle],
