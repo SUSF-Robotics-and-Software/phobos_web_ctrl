@@ -180,7 +180,7 @@ export default {
         gamepadHandler(event, connecting) {
             let gamepad_event = event.gamepad;
 
-            if (connecting && gamepad_event.id.includes('Xbox')) {
+            if (connecting) {
                 if (Object.keys(this.gamepads).length == 0) {
                     this.gamepad = gamepad_event;
                     this.updateGamepad();
@@ -188,7 +188,7 @@ export default {
 
                 console.log(gamepad_event.id, ' connected');
                 this.gamepads[gamepad_event.index] = gamepad_event;
-            } else if (gamepad_event.id.includes('Xbox')) {
+            } else {
                 console.log(gamepad_event.id, ' disconnected');
                 delete this.gamepads[gamepad_event.index];
 
