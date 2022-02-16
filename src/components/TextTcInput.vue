@@ -1,4 +1,5 @@
 <template>
+    <!-- Command line for text commands -->
     <v-text-field
         v-model="raw_tc"
         outlined

@@ -1,17 +1,16 @@
 <template #label>
     <div>
         <v-card>
+            <!-- Displays a table of arm motor angles -->
             <v-card-text class="py-0 text-center text-h6">
                 Arm angles (deg)
                 <v-divider></v-divider>
                 <v-row class="text-center">
                     <v-col
-                        v-for="(value, row, index) in arm_angles_deg"
+                        v-for="(value, row) in arm_angles_deg"
                         v-bind:key="row"
                     >
-                        <!-- <v-divider v-if="index != 0" vertical></v-divider> -->
                         {{ row }}: {{ value }}
-                        <v-divider v-if="index != Object.keys(arm_angles_deg).length - 1" vertical></v-divider>
                     </v-col>
                 </v-row>
             </v-card-text>
@@ -22,9 +21,16 @@
 <script>
 export default {
     computed: {
+        /**
+         * @returns Current arm parameters
+         */
         arm_ctrl_output() {
             return this.$store.state.tm.arm_ctrl_output;
         },
+        /**
+         * Arm angles converted to degrees
+         * @returns Arm motor angles in degrees as Base, Shoulder, Elbow, Wrist, Grabber
+         */
         arm_angles_deg() {
             return {
                 Base: (

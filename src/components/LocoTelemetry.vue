@@ -1,6 +1,7 @@
 <template #label>
     <div>
         <v-card>
+            <!-- Displays a table of rover wheel speeds and angles -->
             <v-card-text class="py-0 text-center text-h6">
                 <v-row>
                     <v-col sm="5">
@@ -44,9 +45,16 @@
 <script>
 export default {
     computed: {
+        /**
+         * @returns Current wheel parameters
+         */
         loco_ctrl_output() {
             return this.$store.state.tm.loco_ctrl_output;
         },
+        /**
+         * Left wheel angles converted to degrees
+         * @returns {object} Left wheel angles in degrees as F (front), M (middle), R (rear)
+         */
         wheel_angles_L_deg() {
             return {
                 F: (
@@ -63,6 +71,10 @@ export default {
                 ).toFixed(0),
             };
         },
+        /**
+         * Right wheel angles converted to degrees
+         * @returns {object} Right wheel angles in degrees as F (front), M (middle), R (rear)
+         */
         wheel_angles_R_deg() {
             return {
                 F: (
@@ -79,6 +91,10 @@ export default {
                 ).toFixed(0),
             };
         },
+        /**
+         * Left wheel speeds converted to degrees per second
+         * @returns {object} Left wheel speeds in degrees per second as F (front), M (middle), R (rear)
+         */
         wheel_speeds_L_degs() {
             return {
                 F: (
@@ -95,6 +111,10 @@ export default {
                 ).toFixed(0),
             };
         },
+        /**
+         * Right wheel speeds converted to degrees per second
+         * @returns {object} Right wheel speeds in degrees per second as F (front), M (middle), R (rear)
+         */
         wheel_speeds_R_degs() {
             return {
                 F: (
